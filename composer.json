@@ -1,5 +1,5 @@
 {
-    "name": "statamic/eloquent-driver",
+    "name": "adaptdk/eloquent-driver",
     "description": "Allows you to store Statamic data in a database.",
     "autoload": {
         "psr-4": {
