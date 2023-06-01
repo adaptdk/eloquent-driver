@@ -13,7 +13,7 @@ class AssetContainerRepository extends StacheRepository
 
     public function all(): Collection
     {
-        return Blink::once('eloquent-assetcontainers-all', function () {
+        return Blink::once('eloquent-assetcontainers', function () {
             return app('statamic.eloquent.assets.container_model')::all()
                 ->map(function ($model) {
                     return Blink::once("eloquent-assetcontainers-{$model->handle}", function () use ($model) {
@@ -53,7 +53,7 @@ class AssetContainerRepository extends StacheRepository
         $container->delete();
 
         Blink::forget("eloquent-assetcontainers-{$container->handle()}");
-        Blink::forget('eloquent-assetcontainers-all');
+        Blink::forget('eloquent-assetcontainers');
     }
 
     public static function bindings(): array
