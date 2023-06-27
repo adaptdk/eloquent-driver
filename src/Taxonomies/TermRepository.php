@@ -3,6 +3,7 @@
 namespace Statamic\Eloquent\Taxonomies;
 
 use Statamic\Contracts\Taxonomies\Term as TermContract;
+use Statamic\Facades\Blink;
 use Statamic\Facades\Collection;
 use Statamic\Facades\Taxonomy;
 use Statamic\Stache\Repositories\TermRepository as StacheRepository;
@@ -22,12 +23,22 @@ class TermRepository extends StacheRepository
     {
         [$handle, $slug] = explode('::', $id);
 
-        $term = $this->query()
-            ->where('taxonomy', $handle)
-            ->where('slug', $slug)
-            ->get();
+        $blinkKey = "eloquent-term-{$id}";
+        $term = Blink::once($blinkKey, function () use ($handle, $slug) {
+            return $this->query()
+                ->where('taxonomy', $handle)
+                ->where('slug', $slug)
+                ->get()
+                ->first();
+        });
 
-        return $term ? $term->first() : null;
+        if (! $term) {
+            Blink::forget($blinkKey);
+
+            return null;
+        }
+
+        return $term;
     }
 
     public function findByUri(string $uri, string $site = null): ?TermContract
@@ -63,12 +74,17 @@ class TermRepository extends StacheRepository
             return null;
         }
 
-        $term = $this->query()
-            ->where('slug', $slug)
-            ->where('taxonomy', $taxonomy)
-            ->first();
+        $blinkKey = "eloquent-term-{$uri}".($site ? '-'.$site : '');
+        $term = Blink::once($blinkKey, function () use ($slug, $taxonomy) {
+            return $this->query()
+                ->where('slug', $slug)
+                ->where('taxonomy', $taxonomy)
+                ->first();
+        });
 
         if (! $term) {
+            Blink::forget($blinkKey);
+
             return null;
         }
 
